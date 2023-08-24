@@ -1,3 +1,6 @@
+from _decimal import Decimal
+
+from django.core.validators import MinValueValidator
 from django.db import models
 
 class User(models.Model):
@@ -9,7 +12,7 @@ class User(models.Model):
 
 class Account(models.Model):
     user_id = models.ForeignKey(User, on_delete=models.CASCADE)
-    balance = models.DecimalField(max_digits=19, decimal_places=2)
+    balance = models.DecimalField(max_digits=19, decimal_places=2, validators=[MinValueValidator(Decimal('0.00'))])
     open_date = models.DateField()
 
     def __str__(self):
