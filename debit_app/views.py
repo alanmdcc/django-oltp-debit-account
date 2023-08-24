@@ -10,7 +10,7 @@ from .serializers import UserSerializer, AccountSerializer, CardSerializer
 
 @api_view(['GET'])
 def endpoints(_):
-    data = ['/user', 'user/<int:id>', 'account/', 'account/int:id']
+    data = ['/user', 'user/<int:id>', 'account/', 'account/int:id', 'card/', 'card/<int:id>']
     return Response(data)
 
 
