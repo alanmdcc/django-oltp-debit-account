@@ -13,6 +13,11 @@ python manage.py makemigrations
 python manage.py migrate
 ```
 
+Run tests
+```
+python manage.py test
+```
+
 Create a super user to interact with admin interface (Optional)
 ```
 python manage.py createsuperuser
