@@ -3,8 +3,8 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from .models import User, Account
-from .serializers import UserSerializer, AccountSerializer
+from .models import User, Account, Card
+from .serializers import UserSerializer, AccountSerializer, CardSerializer
 
 
 @api_view(['GET'])
@@ -84,6 +84,12 @@ class AccountDetailView(APIView):
         except Account.DoesNotExist:
             raise Http404
 
+    def get_user(self, id):
+        try:
+            return User.objects.get(id=id)
+        except User.DoesNotExist:
+            raise Http404
+
     def get(self, _, id):
         account = self.get_account(id=id)
         serializer = AccountSerializer(account, many=False)
@@ -91,7 +97,7 @@ class AccountDetailView(APIView):
 
     def put(self, request, id):
         account = self.get_account(id=id)
-        account.user_id = User.objects.get(id=request.data['user_id'])
+        account.user_id = self.get_user(id=request.data['user_id'])
         account.balance = request.data['balance']
         account.open_date = request.data['open_date']
         account.save()
@@ -102,3 +108,55 @@ class AccountDetailView(APIView):
         account = self.get_account(id=id)
         account.delete()
         return Response('Account was deleted')
+
+
+class CardView(APIView):
+    def get(self, _):
+        accounts = Card.objects.all()
+        serializer = CardSerializer(accounts, many=True)
+        return Response(serializer.data)
+
+    def post(self, request):
+        try:
+            card = Card.objects.create(
+                account_id=Account.objects.get(id=request.data['account_id']),
+                name=request.data['name'],
+                cvv=request.data['cvv']
+            )
+        except Account.DoesNotExist:
+            raise Http404
+        serializer = CardSerializer(card, many=False)
+        return Response(serializer.data)
+
+
+class CardDetailView(APIView):
+    def get_card(self, id):
+        try:
+            return Card.objects.get(id=id)
+        except Card.DoesNotExist:
+            raise Http404
+
+    def get_account(self, id):
+        try:
+            return Account.objects.get(id=id)
+        except Account.DoesNotExist:
+            raise Http404
+
+    def get(self, _, id):
+        account = self.get_card(id=id)
+        serializer = CardSerializer(account, many=False)
+        return Response(serializer.data)
+
+    def put(self, request, id):
+        card = self.get_card(id=id)
+        card.account_id = Account.objects.get(id=request.data['account_id'])
+        card.name = request.data['name']
+        card.cvv = request.data['cvv']
+        card.save()
+        serializer = CardSerializer(card, many=False)
+        return Response(serializer.data)
+
+    def delete(self, _, id):
+        card = self.get_card(id=id)
+        card.delete()
+        return Response('Card was deleted')
