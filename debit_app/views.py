@@ -4,13 +4,13 @@ from rest_framework.exceptions import ParseError
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from .models import User, Account, Card
-from .serializers import UserSerializer, AccountSerializer, CardSerializer
+from .models import User, Account, Card, Transaction
+from .serializers import UserSerializer, AccountSerializer, CardSerializer, TransactionSerializer
 
 
 @api_view(['GET'])
 def endpoints(_):
-    data = ['/user', 'user/<int:id>', 'account/', 'account/int:id', 'card/', 'card/<int:id>']
+    data = ['/user', 'user/<int:id>', 'account/', 'account/int:id', 'card/', 'card/<int:id>', 'transaction/']
     return Response(data)
 
 
@@ -173,3 +173,48 @@ class CardDetailView(APIView):
         card = self.get_card(id=id)
         card.delete()
         return Response('Card was deleted')
+
+class TransactionView(APIView):
+    def validatePositiveBalance(self, balance):
+        if (float(balance) < 0):
+            raise ParseError(detail="Balance must be positive")
+        return balance
+
+    def get_card(self, id):
+        try:
+            return Card.objects.get(id=id)
+        except Card.DoesNotExist:
+            raise Http404
+
+    def get_account(self, id):
+        try:
+            return Account.objects.get(id=id)
+        except Account.DoesNotExist:
+            raise Http404
+
+    def get(self, _):
+        transactions = Transaction.objects.all()
+        serializer = TransactionSerializer(transactions, many=True)
+        return Response(serializer.data)
+
+    def post(self, request):
+        card = self.get_card(id=request.data['card_id'])
+        account = self.get_account(id=card.account_id.id)
+
+        new_balance = account.balance + request.data['amount']
+        new_balance = self.validatePositiveBalance(new_balance)
+
+        account.balance = new_balance
+        account.save()
+
+        try:
+            card = Transaction.objects.create(
+                card_id=card,
+                amount=request.data['amount'],
+                appr_status=request.data['appr_status']
+            )
+        except Card.DoesNotExist:
+            raise Http404
+        serializer = TransactionSerializer(card, many=False)
+        return Response(serializer.data)
+

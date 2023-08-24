@@ -1,7 +1,7 @@
 from django.urls import path
 
 from . import views
-from .views import UserView, UserDetailView, AccountView, AccountDetailView, CardView, CardDetailView
+from .views import UserView, UserDetailView, AccountView, AccountDetailView, CardView, CardDetailView, TransactionView
 
 urlpatterns = [
     path('', views.endpoints),
@@ -11,4 +11,5 @@ urlpatterns = [
     path('account/<int:id>', AccountDetailView.as_view()),
     path('card/', CardView.as_view()),
     path('card/<int:id>', CardDetailView.as_view()),
+    path('transaction/', TransactionView.as_view()),
 ]
